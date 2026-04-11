@@ -25,7 +25,7 @@ class _ReportsHistoryScreenState extends State<ReportsHistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de Reportes', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Reports History', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: RefreshIndicator(
         onRefresh: () => formsProvider.fetchRecentForms(),
@@ -46,7 +46,7 @@ class _ReportsHistoryScreenState extends State<ReportsHistoryScreen> {
           children: [
             Icon(Icons.history_edu_outlined, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            const Text('No hay reportes registrados aún', style: TextStyle(color: Colors.grey)),
+            const Text('No reports registered yet', style: TextStyle(color: Colors.grey)),
           ],
         ),
       );

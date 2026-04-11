@@ -1,22 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/laundry_form_model.dart';
 import '../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
+import '../providers/forms_provider.dart';
 
-class ReportDetailScreen extends StatelessWidget {
+class ReportDetailScreen extends StatefulWidget {
   final LaundryForm form;
 
   const ReportDetailScreen({super.key, required this.form});
 
+  @override
+  State<ReportDetailScreen> createState() => _ReportDetailScreenState();
+}
+
+class _ReportDetailScreenState extends State<ReportDetailScreen> {
+  bool _isApproving = false;
+  late LaundryForm _currentForm;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentForm = widget.form;
+  }
+
   String _translateSection(String section) {
-    return section.toUpperCase(); // Mantener en inglés original
+    return section.toUpperCase();
+  }
+
+  Future<void> _handleApprove() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Approve Report'),
+        content: const Text('Are you sure you want to mark this report as APPROVED? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Approve')),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isApproving = true);
+      final success = await context.read<FormsProvider>().approveForm(_currentForm.id!);
+      if (mounted) {
+        setState(() => _isApproving = false);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report approved successfully!')));
+          // Para actualizar el estado visualmente, recargamos la info si es necesario o cerramos
+          Navigator.pop(context); 
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to approve report.')));
+        }
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final bool isAdmin = auth.user?.role == 'ADMIN';
+    final bool isManager = auth.user?.role == 'MANAGER' || isAdmin;
+    final bool canApprove = isManager && _currentForm.status == FormStatus.PENDING_APPROVAL;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle del Reporte', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Report Details', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -27,12 +78,12 @@ class ReportDetailScreen extends StatelessWidget {
             const SizedBox(height: 32),
             _buildGeneralInfo(),
             const SizedBox(height: 32),
-            const Text('DESGLOSE POR SECCIÓN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+            const Text('SECTION BREAKDOWN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
             const SizedBox(height: 16),
-            ...form.sections.map((section) => _buildSectionDetail(section)),
-            if (form.notes != null && form.notes!.isNotEmpty) ...[
+            ..._currentForm.sections.map((section) => _buildSectionDetail(section)),
+            if (_currentForm.notes != null && _currentForm.notes!.isNotEmpty) ...[
               const SizedBox(height: 24),
-              const Text('NOTAS ADICIONALES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+              const Text('ADDITIONAL NOTES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
@@ -41,9 +92,27 @@ class ReportDetailScreen extends StatelessWidget {
                   color: Colors.grey[100],
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(form.notes!, style: const TextStyle(height: 1.5)),
+                child: Text(_currentForm.notes!, style: const TextStyle(height: 1.5)),
               ),
             ],
+            const SizedBox(height: 20),
+            if (canApprove)
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton.icon(
+                  onPressed: _isApproving ? null : _handleApprove,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: _isApproving 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.check_circle_outline),
+                  label: Text(_isApproving ? 'Approving...' : 'Approve Report'),
+                ),
+              ),
             const SizedBox(height: 40),
           ],
         ),
@@ -55,16 +124,39 @@ class ReportDetailScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          form.company?.name ?? 'Cliente Desconocido',
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                _currentForm.company?.name ?? 'Unknown Client',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+              ),
+            ),
+            _buildStatusBadge(_currentForm.status),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
-          'Registro del ${DateFormat('dd MMMM, yyyy', 'es').format(form.date)}',
+          'Logged on ${DateFormat('dd MMMM, yyyy', 'en').format(_currentForm.date)}',
           style: const TextStyle(color: Colors.grey),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusBadge(FormStatus status) {
+    Color color;
+    String label;
+    switch (status) {
+      case FormStatus.APPROVED: color = Colors.green; label = 'APPROVED'; break;
+      case FormStatus.PENDING_APPROVAL: color = Colors.orange; label = 'PENDING'; break;
+      default: color = Colors.grey; label = 'DRAFT';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -79,16 +171,15 @@ class ReportDetailScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _SummaryItem(label: 'Bolsillos', value: '${form.pocketCount}', icon: Icons.work_outline),
-          _SummaryItem(label: 'Bolsas (S)', value: '${form.plasticBagsSmall}', icon: Icons.shopping_bag_outlined),
-          _SummaryItem(label: 'Bolsas (L)', value: '${form.plasticBagsLarge}', icon: Icons.shopping_bag),
+          _SummaryItem(label: 'Pockets', value: '${_currentForm.pocketCount}', icon: Icons.work_outline),
+          _SummaryItem(label: 'Bags (S)', value: '${_currentForm.plasticBagsSmall}', icon: Icons.shopping_bag_outlined),
+          _SummaryItem(label: 'Bags (L)', value: '${_currentForm.plasticBagsLarge}', icon: Icons.shopping_bag),
         ],
       ),
     );
   }
 
   Widget _buildSectionDetail(FormSectionModel section) {
-    // Agrupar items por categoría para mostrar Standard vs Color juntos
     final Map<String, Map<String, int>> grouped = {};
     for (var item in section.items) {
       if (!grouped.containsKey(item.category)) {
@@ -115,14 +206,14 @@ class ReportDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.05),
+              color: AppTheme.primaryColor.withOpacity(0.05),
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_translateSection(section.sectionName), style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
-                Text('Llenado por: ${section.filledByInitials}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                Text('Filled by: ${section.filledByInitials}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
               ],
             ),
           ),
@@ -133,16 +224,13 @@ class ReportDetailScreen extends StatelessWidget {
                 final itemName = entry.key;
                 final std = entry.value['std']!;
                 final clr = entry.value['clr']!;
-                
                 if (std == 0 && clr == 0) return const SizedBox.shrink();
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: Text(itemName, style: const TextStyle(fontWeight: FontWeight.w500)),
-                      ),
+                      Expanded(child: Text(itemName, style: const TextStyle(fontWeight: FontWeight.w500))),
                       _CountBadge(label: 'ST', value: std, color: AppTheme.primaryColor),
                       const SizedBox(width: 8),
                       _CountBadge(label: 'CL', value: clr, color: Colors.indigo),
@@ -190,7 +278,7 @@ class _CountBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: value > 0 ? color.withValues(alpha: 0.1) : Colors.grey[100],
+        color: value > 0 ? color.withOpacity(0.1) : Colors.grey[100],
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

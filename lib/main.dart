@@ -5,6 +5,7 @@ import 'package:laundry_app/providers/auth_provider.dart';
 import 'package:laundry_app/providers/company_provider.dart';
 import 'package:laundry_app/providers/forms_provider.dart';
 import 'package:laundry_app/providers/catalog_provider.dart';
+import 'package:laundry_app/services/socket_service.dart';
 import 'package:laundry_app/screens/login_screen.dart';
 import 'package:laundry_app/screens/main_layout.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -20,6 +21,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CompanyProvider()),
         ChangeNotifierProvider(create: (_) => FormsProvider()),
         ChangeNotifierProvider(create: (_) => CatalogProvider()),
+        ChangeNotifierProvider(create: (_) => SocketService()),
       ],
       child: const MyApp(),
     ),
@@ -40,15 +42,34 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool? _wasAuthenticated;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = context.watch<AuthProvider>();
+    
+    if (auth.isAuthenticated && _wasAuthenticated != true) {
+      _wasAuthenticated = true;
+      context.read<SocketService>().connect();
+    } else if (!auth.isAuthenticated && _wasAuthenticated == true) {
+      _wasAuthenticated = false;
+      context.read<SocketService>().disconnect();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    
-    // Si está autenticado, mostramos la Home (que crearemos luego)
-    // Por ahora, si no está autenticado, mostramos el Login
+
     if (auth.isAuthenticated) {
       return const MainLayout();
     }

@@ -67,4 +67,25 @@ class FormsProvider extends ChangeNotifier {
     notifyListeners();
     return false;
   }
+
+  Future<bool> approveForm(String id) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.dio.patch('/forms/$id/approve');
+      if (response.statusCode == 200) {
+        await fetchStats();
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error approving form: $e');
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return false;
+  }
 }

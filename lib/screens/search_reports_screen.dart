@@ -75,7 +75,7 @@ class _SearchReportsScreenState extends State<SearchReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Búsqueda Avanzada', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Advanced Search', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Column(
         children: [
@@ -105,13 +105,13 @@ class _SearchReportsScreenState extends State<SearchReportsScreen> {
           DropdownButtonFormField<String>(
             value: _selectedCompanyId,
             decoration: InputDecoration(
-              hintText: 'Seleccionar Cliente (Opcional)',
+              hintText: 'Select Client (Optional)',
               prefixIcon: const Icon(Icons.business),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Todos los clientes')),
+              const DropdownMenuItem(value: null, child: Text('All clients')),
               ...companyProvider.companies.map((c) => DropdownMenuItem(
                 value: c.id,
                 child: Text(c.name),
@@ -137,7 +137,7 @@ class _SearchReportsScreenState extends State<SearchReportsScreen> {
                   Expanded(
                     child: Text(
                       _dateRange == null 
-                        ? 'Cualquier fecha' 
+                        ? 'Any date' 
                         : '${DateFormat('dd/MM/yy').format(_dateRange!.start)} - ${DateFormat('dd/MM/yy').format(_dateRange!.end)}',
                       style: TextStyle(color: _dateRange == null ? Colors.grey[600] : Colors.black),
                     ),
@@ -165,7 +165,7 @@ class _SearchReportsScreenState extends State<SearchReportsScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('BUSCAR REPORTES', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              child: const Text('SEARCH REPORTS', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
             ),
           ),
         ],
@@ -185,14 +185,14 @@ class _SearchReportsScreenState extends State<SearchReportsScreen> {
           children: [
             Icon(Icons.search, size: 80, color: Colors.grey[200]),
             const SizedBox(height: 16),
-            const Text('Aplica filtros para buscar reportes', style: TextStyle(color: Colors.grey)),
+            const Text('Apply filters to search reports', style: TextStyle(color: Colors.grey)),
           ],
         ),
       );
     }
 
     if (provider.recentForms.isEmpty) {
-      return const Center(child: Text('No se encontraron resultados'));
+      return const Center(child: Text('No results found'));
     }
 
     return ListView.builder(

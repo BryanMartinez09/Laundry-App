@@ -36,7 +36,7 @@ class ReportCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      form.company?.name ?? 'Cliente Desconocido',
+                      form.company?.name ?? 'Unknown Client',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -50,14 +50,14 @@ class ReportCard extends StatelessWidget {
                   const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey),
                   const SizedBox(width: 8),
                   Text(
-                    DateFormat('dd MMM, yyyy', 'es').format(form.date),
+                    DateFormat('dd MMM, yyyy', 'en').format(form.date),
                     style: const TextStyle(color: Colors.grey, fontSize: 13),
                   ),
                   const SizedBox(width: 16),
                   const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
                   const SizedBox(width: 8),
                   Text(
-                    '${form.sections.length} Secciones',
+                    '${form.sections.length} Sections',
                     style: const TextStyle(color: Colors.grey, fontSize: 13),
                   ),
                 ],
@@ -66,9 +66,9 @@ class ReportCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _infoItem('Bolsillos', '${form.pocketCount}'),
-                  _infoItem('Bolsas (S)', '${form.plasticBagsSmall}'),
-                  _infoItem('Bolsas (L)', '${form.plasticBagsLarge}'),
+                  _infoItem('Pockets', '${form.pocketCount}'),
+                  _infoItem('Bags (S)', '${form.plasticBagsSmall}'),
+                  _infoItem('Bags (L)', '${form.plasticBagsLarge}'),
                 ],
               ),
             ],
@@ -103,15 +103,15 @@ class _StatusChip extends StatelessWidget {
     switch (status) {
       case FormStatus.APPROVED:
         color = Colors.green;
-        label = 'APROBADO';
+        label = 'APPROVED';
         break;
       case FormStatus.PENDING_APPROVAL:
         color = Colors.orange;
-        label = 'PENDIENTE';
+        label = 'PENDING';
         break;
       default:
         color = Colors.grey;
-        label = 'BORRADOR';
+        label = 'DRAFT';
     }
 
     return Container(

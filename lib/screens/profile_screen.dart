@@ -13,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mi Perfil', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('My Profile', style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -32,7 +32,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              user?.name ?? 'Cargando...',
+              user?.name ?? 'Loading...',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(
@@ -44,13 +44,13 @@ class ProfileScreen extends StatelessWidget {
             // Info Cards
             _buildInfoCard(
               icon: Icons.badge_outlined,
-              label: 'Rol en el sistema',
-              value: user?.role ?? 'Empleado',
+              label: 'System Role',
+              value: user?.role ?? 'Employee',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               icon: Icons.fingerprint,
-              label: 'ID de Usuario',
+              label: 'User ID',
               value: user?.id?.substring(0, 8).toUpperCase() ?? '--------',
             ),
             
@@ -68,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 onPressed: () => _handleLogout(context),
-                label: const Text('Cerrar Sesión', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 20),
@@ -118,12 +118,12 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cerrar Sesión'),
-        content: const Text('¿Estás seguro que deseas salir de la aplicación?'),
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to exit the application?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -131,7 +131,7 @@ class ProfileScreen extends StatelessWidget {
               Navigator.pop(context);
               context.read<AuthProvider>().logout();
             },
-            child: const Text('Cerrar Sesión'),
+            child: const Text('Log Out'),
           ),
         ],
       ),

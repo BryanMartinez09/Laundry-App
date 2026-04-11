@@ -14,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -23,13 +24,13 @@ class _LoginScreenState extends State<LoginScreen> {
           );
 
       if (success && mounted) {
-        // Por ahora solo mostramos un mensaje, luego navegaremos
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Inicio de sesión exitoso!')),
+          const SnackBar(content: Text('Login successful!')),
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email o contraseña incorrectos')),
+          const SnackBar(content: Text('Incorrect email or password')),
         );
       }
     }
@@ -115,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: Icon(Icons.email_outlined, size: 20),
                             hintText: 'email@example.com',
                           ),
-                          validator: (value) => (value == null || !value.contains('@')) ? 'Email inválido' : null,
+                          validator: (value) => (value == null || !value.contains('@')) ? 'Invalid email' : null,
                         ),
                         const SizedBox(height: 24),
 
@@ -133,13 +134,23 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.lock_outline, size: 20),
-                            suffixIcon: Icon(Icons.visibility_outlined, size: 20),
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
                             hintText: '••••••••',
                           ),
-                          validator: (value) => (value == null || value.length < 6) ? 'Contraseña muy corta' : null,
+                          validator: (value) => (value == null || value.length < 6) ? 'Password too short' : null,
                         ),
                         const SizedBox(height: 32),
 

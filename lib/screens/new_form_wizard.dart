@@ -77,6 +77,77 @@ class _NewFormWizardState extends State<NewFormWizard> {
     }
   }
 
+  void _showFormSummaryModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final Map<String, int> totals = {'std': 0, 'clr': 0};
+        final List<Widget> itemDetails = [];
+        
+        _counts.forEach((name, counts) {
+          final std = counts['std'] ?? 0;
+          final clr = counts['clr'] ?? 0;
+          if (std > 0 || clr > 0) {
+            totals['std'] = totals['std']! + std;
+            totals['clr'] = totals['clr']! + clr;
+            itemDetails.add(
+              ListTile(
+                dense: true,
+                title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Row(
+                  children: [
+                    if (std > 0) Text('Est: $std ', style: const TextStyle(color: Colors.blue)),
+                    if (clr > 0) Text('Col: $clr', style: const TextStyle(color: Colors.orange)),
+                  ],
+                ),
+                trailing: Text('${std + clr}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            );
+          }
+        });
+
+        return Container(
+          padding: const EdgeInsets.only(top: 20, bottom: 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('LOAD DETAILS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              if (itemDetails.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Text('No items added yet.'),
+                )
+              else ...[
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: itemDetails,
+                  ),
+                ),
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('TOTAL:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('${totals['std']! + totals['clr']!} items', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.primaryColor)),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
@@ -92,10 +163,18 @@ class _NewFormWizardState extends State<NewFormWizard> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Nuevo Registro', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text('Paso ${_currentStep + 1} de 5', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const Text('New Entry', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('Step ${_currentStep + 1} of 5', style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
+        actions: [
+          if (_currentStep > 0)
+            IconButton(
+              icon: const Icon(Icons.list_alt_rounded),
+              onPressed: _showFormSummaryModal,
+              tooltip: 'Ver detalle actual',
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -110,9 +189,9 @@ class _NewFormWizardState extends State<NewFormWizard> {
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _buildStep1Header(),
-                _buildSectionStep('RATINE', catalog.getItemsByCategory('TOWELS')),
-                _buildSectionStep('DRAPS (Sábanas)', catalog.getItemsByCategory('BED_SHEETS')),
-                _buildSectionStep('LITERIE', catalog.getItemsByCategory('COVERS')),
+                _buildSectionStep('TOWELS', catalog.getItemsByCategory('TOWELS')),
+                _buildSectionStep('BED SHEETS', catalog.getItemsByCategory('BED_SHEETS')),
+                _buildSectionStep('COVERS', catalog.getItemsByCategory('COVERS')),
                 _buildStep5Summary(),
               ],
             ),
@@ -131,16 +210,16 @@ class _NewFormWizardState extends State<NewFormWizard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Información General', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text('General Info', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text('Selecciona el cliente y los detalles básicos del lote.', style: TextStyle(color: Colors.grey)),
+          const Text('Select the client and basic lot details.', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 32),
-          const Text('CLIENTE / COMERCIO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+          const Text('CLIENT / BUSINESS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
           const SizedBox(height: 8),
           DropdownButtonFormField<Company>(
             value: _selectedCompany,
             decoration: const InputDecoration(prefixIcon: Icon(Icons.business_outlined)),
-            hint: const Text('Seleccionar empresa'),
+            hint: const Text('Select company'),
             items: companies.map((c) {
               return DropdownMenuItem(value: c, child: Text(c.name));
             }).toList(),
@@ -153,13 +232,13 @@ class _NewFormWizardState extends State<NewFormWizard> {
             (val) => setState(() => _pocketCount = val),
           ),
           const SizedBox(height: 24),
-          const Text('BOLSAS DE PLÁSTICO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+          const Text('PLASTIC BAGS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: _buildCounterField(
-                  'PEQUEÑAS',
+                  'SMALL',
                   _plasticBagsSmall,
                   (val) => setState(() => _plasticBagsSmall = val),
                 ),
@@ -167,7 +246,7 @@ class _NewFormWizardState extends State<NewFormWizard> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildCounterField(
-                  'GRANDES',
+                  'LARGE',
                   _plasticBagsLarge,
                   (val) => setState(() => _plasticBagsLarge = val),
                 ),
@@ -190,7 +269,7 @@ class _NewFormWizardState extends State<NewFormWizard> {
             children: [
               Text(sectionTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Text('Indica las cantidades contadas.', style: TextStyle(color: Colors.grey)),
+              const Text('Enter the counted quantities.', style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 24),
             ],
           );
@@ -208,37 +287,104 @@ class _NewFormWizardState extends State<NewFormWizard> {
   }
 
   Widget _buildStep5Summary() {
+    int totalItems = 0;
+    _counts.forEach((_, val) => totalItems += (val['std'] ?? 0) + (val['clr'] ?? 0));
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Resumen Final', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text('Final Summary', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text('Revisa los datos antes de enviar.', style: TextStyle(color: Colors.grey)),
+          const Text('Review data before submitting.', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 24),
+          
           ListTile(
-            title: const Text('Cliente'),
-            subtitle: Text(_selectedCompany?.name ?? 'No seleccionado'),
-            leading: const Icon(Icons.business_outlined),
-          ),
-          ListTile(
-            title: const Text('Configuración'),
-            subtitle: Text('Bolsillos: $_pocketCount | Bolsas (S): $_plasticBagsSmall | Bolsas (L): $_plasticBagsLarge'),
-            leading: const Icon(Icons.settings_suggest_outlined),
+            title: const Text('Client'),
+            subtitle: Text(_selectedCompany?.name ?? 'Not selected'),
+            leading: const CircleAvatar(child: Icon(Icons.business_outlined)),
+            contentPadding: EdgeInsets.zero,
           ),
           const Divider(),
+          
+          InkWell(
+            onTap: _showFormSummaryModal,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.inventory_2_outlined, color: AppTheme.primaryColor),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('REGISTERED ITEMS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text('$totalItems items in total', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  const Text('View detail', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                  const Icon(Icons.chevron_right, color: AppTheme.primaryColor, size: 16),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          const Text('PACKAGING DETAILS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildSummaryMiniStat('Pockets', '$_pocketCount'),
+              const SizedBox(width: 12),
+              _buildSummaryMiniStat('Small Bags', '$_plasticBagsSmall'),
+              const SizedBox(width: 12),
+              _buildSummaryMiniStat('Large Bags', '$_plasticBagsLarge'),
+            ],
+          ),
+
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Text('NOTAS ADICIONALES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            padding: EdgeInsets.only(top: 24, bottom: 8),
+            child: Text('ADDITIONAL NOTES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
           ),
           TextField(
             onChanged: (val) => _notes = val,
-            decoration: const InputDecoration(hintText: 'Escribe algo aquí...'),
+            decoration: InputDecoration(
+              hintText: 'e.g. Watch out for the silk sheet...',
+              filled: true,
+              fillColor: Colors.grey[50],
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            ),
             maxLines: 3,
           ),
           const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryMiniStat(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Column(
+          children: [
+            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+          ],
+        ),
       ),
     );
   }
@@ -282,7 +428,7 @@ class _NewFormWizardState extends State<NewFormWizard> {
             if (_currentStep > 0)
               TextButton(
                 onPressed: _previousPage,
-                child: const Text('Anterior'),
+                child: const Text('Back'),
               )
             else
               const SizedBox(width: 10),
@@ -291,14 +437,14 @@ class _NewFormWizardState extends State<NewFormWizard> {
                 return ElevatedButton(
                   onPressed: (_selectedCompany == null || forms.isLoading) 
                     ? null 
-                    : (_currentStep < 4 ? _nextPage : _submitFullForm),
+                    : (_currentStep < 4 ? _nextPage : _showStatusSelection),
                   child: forms.isLoading 
                     ? const SizedBox(
                         height: 20, 
                         width: 20, 
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                       )
-                    : Text(_currentStep < 4 ? 'Continuar' : 'Finalizar'),
+                    : Text(_currentStep < 4 ? 'Continue' : 'Finish'),
                 );
               },
             ),
@@ -308,7 +454,51 @@ class _NewFormWizardState extends State<NewFormWizard> {
     );
   }
 
-  void _submitFullForm() async {
+  void _showStatusSelection() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('How do you want to save this report?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('Select "Draft" to continue later or "Submit" to send it for approval.', style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 24),
+              
+              ListTile(
+                leading: const CircleAvatar(backgroundColor: Colors.amber, child: Icon(Icons.edit_note, color: Colors.white)),
+                title: const Text('Save as Draft'),
+                subtitle: const Text('Keeps it editable'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _submitFullForm(FormStatus.DRAFT);
+                },
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const CircleAvatar(backgroundColor: Colors.green, child: Icon(Icons.check_circle_outline, color: Colors.white)),
+                title: const Text('Submit for Approval'),
+                subtitle: const Text('Marks it as Pending'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _submitFullForm(FormStatus.PENDING_APPROVAL);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _submitFullForm(FormStatus status) async {
     final catalog = context.read<CatalogProvider>();
     
     List<FormSectionModel> sections = [
@@ -325,13 +515,14 @@ class _NewFormWizardState extends State<NewFormWizard> {
       plasticBagsLarge: _plasticBagsLarge,
       notes: _notes,
       sections: sections,
+      status: status,
     );
 
     final success = await context.read<FormsProvider>().submitForm(form);
     if (success && mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('¡Reporte enviado con éxito!')),
+        const SnackBar(content: Text('Report submitted successfully!')),
       );
     }
   }

@@ -45,15 +45,15 @@ class CustomNavBar extends StatelessWidget {
               ),
               GButton(
                 icon: LineIcons.fileInvoice,
-                text: 'Reportes',
+                text: 'Reports',
               ),
               GButton(
                 icon: LineIcons.search,
-                text: 'Buscar',
+                text: 'Search',
               ),
               GButton(
                 icon: LineIcons.user,
-                text: 'Perfil',
+                text: 'Profile',
               ),
             ],
             selectedIndex: selectedIndex,

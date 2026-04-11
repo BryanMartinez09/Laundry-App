@@ -71,7 +71,7 @@ class LaundryForm {
       'plasticBagsLarge': plasticBagsLarge,
       'notes': notes,
       'totalTaiesMain': totalTaiesMain,
-      'totalDrapsMain': totalDrapsMain,
+      'status': status.name,
       'sections': sections.map((s) => s.toJson()).toList(),
     };
   }
