@@ -66,4 +66,5 @@ The codebase follows a modular clean architecture approach:
 - **State Management:** Logic is decoupled from the UI using the Provider pattern, ensuring testability and modularity.
 - **Communication Layer:** A centralized Dio client manages interceptors for global error handling and authentication headers.
 - **Zero-Trust Security Architecture:** The application implements a server-driven UI model. Navigation items and feature access are dynamically generated based on the `permissions_mobile` payload provided by the API. The app contains no local permission management, ensuring that security policies are strictly enforced from the centralized web dashboard.
+- **Report Deletion (Soft-Delete):** Users with the `Forms → Delete` permission can delete reports directly from the Report Detail screen. This does not permanently remove data — the report is flagged as `isActive: false` and hidden from all listings, preserving historical integrity. Approved reports are protected from deletion.
 - **Global Alerts:** Integration with Socket.io provides instantaneous system updates and manager feedback.
