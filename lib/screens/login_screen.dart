@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Icon(Icons.blur_on, size: 64, color: Colors.white),
                 const SizedBox(height: 16),
                 const Text(
-                  'ATELIER',
+                  'LAUNDRY',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 32,
@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const Text(
-                  'PREMIUM FABRIC CARE',
+                  'Efficient, affordable and quality laundry service',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -126,10 +126,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             const Text('PASSWORD',
                                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
-                            TextButton(
-                              onPressed: () {},
-                              child: const Text('FORGOT?', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                            ),
+                            // TextButton(
+                            //   onPressed: () {},
+                            //   //child: const Text('FORGOT?', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                            // ),
                           ],
                         ),
                         TextFormField(
@@ -181,11 +181,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         Center(
                           child: Text.rich(
                             TextSpan(
-                              text: 'New to the facility? ',
+                              //text: 'New to the facility? ',
                               style: const TextStyle(fontSize: 12, color: Colors.grey),
                               children: [
                                 TextSpan(
-                                  text: 'Request Access',
+                                 // text: 'Request Access',
                                   style: TextStyle(
                                     color: AppTheme.primaryColor,
                                     fontWeight: FontWeight.bold,
@@ -201,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 const Text(
-                  'V2.1.0  •  ENCRYPTED ATELIER NODE',
+                  'V1.0.0 •  ENCRYPTED LAUNDRY NODE',
                   style: TextStyle(color: Colors.white24, fontSize: 10),
                 ),
               ],

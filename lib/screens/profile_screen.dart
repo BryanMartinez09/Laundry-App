@@ -45,7 +45,7 @@ class ProfileScreen extends StatelessWidget {
             _buildInfoCard(
               icon: Icons.badge_outlined,
               label: 'System Role',
-              value: user?.role ?? 'Employee',
+              value: user?.role.name ?? 'Employee',
             ),
             const SizedBox(height: 16),
             _buildInfoCard(

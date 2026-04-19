@@ -20,7 +20,12 @@ The Laundry Mobile Application is a cross-platform solution developed with Flutt
    ```
 
 2. Configuration:
-   Verify the API endpoints in `lib/core/api/api_client.dart`. Ensure the `baseUrl` correlates with your active backend environment.
+   The application uses environment variables for network configuration. Create or modify the `.env` file in the root directory:
+   ```env
+   API_URL_MOBILE=http://192.168.1.XX:8080  # Your machine's IP for physical devices
+   API_URL_WEB=http://localhost:8080       # For Web/Chrome testing
+   ```
+   For Android Emulators, the app automatically handles the loopback to `10.0.2.2` if configured correctly in the `.env`.
 
 3. Execution:
    ```bash
@@ -60,4 +65,5 @@ The codebase follows a modular clean architecture approach:
 
 - **State Management:** Logic is decoupled from the UI using the Provider pattern, ensuring testability and modularity.
 - **Communication Layer:** A centralized Dio client manages interceptors for global error handling and authentication headers.
+- **Zero-Trust Security Architecture:** The application implements a server-driven UI model. Navigation items and feature access are dynamically generated based on the `permissions_mobile` payload provided by the API. The app contains no local permission management, ensuring that security policies are strictly enforced from the centralized web dashboard.
 - **Global Alerts:** Integration with Socket.io provides instantaneous system updates and manager feedback.

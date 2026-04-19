@@ -68,6 +68,27 @@ class FormsProvider extends ChangeNotifier {
     return false;
   }
 
+  Future<bool> updateForm(String id, LaundryForm form) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.dio.patch('/forms/$id', data: form.toJson());
+      if (response.statusCode == 200) {
+        await fetchStats();
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error updating form: $e');
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return false;
+  }
+
   Future<bool> approveForm(String id) async {
     _isLoading = true;
     notifyListeners();
@@ -86,6 +107,22 @@ class FormsProvider extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+    return false;
+  }
+
+  Future<bool> deleteForm(String id) async {
+    try {
+      final response = await _apiClient.dio.delete('/forms/$id');
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        // Remove from local list so UI updates immediately
+        _recentForms.removeWhere((f) => f.id == id);
+        await fetchStats();
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error deleting form: $e');
+    }
     return false;
   }
 }

@@ -1,7 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.1.3:8080'; // 10.0.2.2 es la IP para acceder al host desde el emulador de Android
+  // Use localhost for web, 10.0.2.2 for Android emulator, or actual IP for physical devices
+  static String get baseUrl {
+    if (kIsWeb) return dotenv.env['API_URL_WEB'] ?? 'http://localhost:8080';
+    
+    // For mobile (Physical or Emulator fallback)
+    return dotenv.env['API_URL_MOBILE'] ?? 'http://192.168.1.3:8080';
+  }
   
   final Dio dio = Dio(BaseOptions(
     baseUrl: baseUrl,

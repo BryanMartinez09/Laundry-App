@@ -5,6 +5,7 @@ import '../models/laundry_form_model.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/forms_provider.dart';
+import 'new_form_wizard.dart';
 
 class ReportDetailScreen extends StatefulWidget {
   final LaundryForm form;
@@ -17,6 +18,7 @@ class ReportDetailScreen extends StatefulWidget {
 
 class _ReportDetailScreenState extends State<ReportDetailScreen> {
   bool _isApproving = false;
+  bool _isDeleting = false;
   late LaundryForm _currentForm;
 
   @override
@@ -27,6 +29,53 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   String _translateSection(String section) {
     return section.toUpperCase();
+  }
+
+  Future<void> _handleDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Report'),
+        content: const Text(
+          'This report will be deleted and hidden from listings. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Deactivate'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isDeleting = true);
+      final success = await context.read<FormsProvider>().deleteForm(_currentForm.id!);
+      if (mounted) {
+        setState(() => _isDeleting = false);
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Report deleted successfully.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to delete report.')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _handleApprove() async {
@@ -61,13 +110,30 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final bool isAdmin = auth.user?.role == 'ADMIN';
-    final bool isManager = auth.user?.role == 'MANAGER' || isAdmin;
+    final user = auth.user;
+    final bool canDelete = (user?.hasPermission('Forms', 'Delete') ?? false) &&
+        _currentForm.status != FormStatus.APPROVED;
+    final bool isAdmin = auth.user?.email == 'admin@laundry.com' ||
+        (auth.user?.role?.name ?? '').toUpperCase() == 'ADMIN';
+    final bool isManager = (auth.user?.role?.name ?? '').toUpperCase() == 'MANAGER' || isAdmin;
     final bool canApprove = isManager && _currentForm.status == FormStatus.PENDING_APPROVAL;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Report Details', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          if (_currentForm.status != FormStatus.APPROVED)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => NewFormWizard(existingForm: _currentForm),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -107,12 +173,31 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  icon: _isApproving 
+                  icon: _isApproving
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : const Icon(Icons.check_circle_outline),
                   label: Text(_isApproving ? 'Approving...' : 'Approve Report'),
                 ),
               ),
+            if (canDelete) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: OutlinedButton.icon(
+                  onPressed: _isDeleting ? null : _handleDelete,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: _isDeleting
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.red, strokeWidth: 2))
+                    : const Icon(Icons.delete_outline),
+                  label: Text(_isDeleting ? 'Deleting...' : 'Delete Report'),
+                ),
+              ),
+            ],
             const SizedBox(height: 40),
           ],
         ),
@@ -168,12 +253,26 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey[200]!),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          _SummaryItem(label: 'Pockets', value: '${_currentForm.pocketCount}', icon: Icons.work_outline),
-          _SummaryItem(label: 'Bags (S)', value: '${_currentForm.plasticBagsSmall}', icon: Icons.shopping_bag_outlined),
-          _SummaryItem(label: 'Bags (L)', value: '${_currentForm.plasticBagsLarge}', icon: Icons.shopping_bag),
+          const Text('PACKAGING & HAND-FINISH', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _SummaryItem(label: 'Pockets', value: '${_currentForm.pocketCount}', icon: Icons.work_outline),
+              _SummaryItem(label: 'Bags (S)', value: '${_currentForm.plasticBagsSmall}', icon: Icons.shopping_bag_outlined),
+              _SummaryItem(label: 'Bags (L)', value: '${_currentForm.plasticBagsLarge}', icon: Icons.shopping_bag),
+            ],
+          ),
+          const Divider(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _SummaryItem(label: 'H-Finished Pillowcases', value: '${_currentForm.totalTaiesMain}', icon: Icons.cleaning_services_outlined),
+              _SummaryItem(label: 'H-Finished Sheets', value: '${_currentForm.totalDrapsMain}', icon: Icons.straighten_outlined),
+            ],
+          ),
         ],
       ),
     );

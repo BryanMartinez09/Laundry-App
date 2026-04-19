@@ -11,7 +11,8 @@ import 'package:laundry_app/core/theme/app_theme.dart';
 import 'package:laundry_app/widgets/laundry_item_counter.dart';
 
 class NewFormWizard extends StatefulWidget {
-  const NewFormWizard({super.key});
+  final LaundryForm? existingForm;
+  const NewFormWizard({super.key, this.existingForm});
 
   @override
   State<NewFormWizard> createState() => _NewFormWizardState();
@@ -23,13 +24,17 @@ class _NewFormWizardState extends State<NewFormWizard> {
 
   // Form Data
   Company? _selectedCompany;
+  DateTime _selectedDate = DateTime.now();
   int _pocketCount = 0;
   int _plasticBagsSmall = 0;
   int _plasticBagsLarge = 0;
+  int _totalTaiesMain = 0;
+  int _totalDrapsMain = 0;
   String? _notes;
 
   // Counts state: { 'ItemName': { 'std': 0, 'clr': 0 } }
   Map<String, Map<String, int>> _counts = {};
+  Map<String, String> _sectionInitials = {};
   bool _initialized = false;
 
   @override
@@ -50,10 +55,46 @@ class _NewFormWizardState extends State<NewFormWizard> {
     }
     
     if (mounted) {
-      setState(() {
-        _counts = initialCounts;
-        _initialized = true;
-      });
+      final String myInitials = context.read<AuthProvider>().user?.initials ?? '??';
+      
+      // If editing, populate from existing form
+      if (widget.existingForm != null) {
+        final form = widget.existingForm!;
+        for (var section in form.sections) {
+          _sectionInitials[section.sectionName] = section.filledByInitials;
+          for (var item in section.items) {
+            initialCounts[item.category] ??= {'std': 0, 'clr': 0};
+            if (item.isColored) {
+              initialCounts[item.category]!['clr'] = item.quantity;
+            } else {
+              initialCounts[item.category]!['std'] = item.quantity;
+            }
+          }
+        }
+        
+        setState(() {
+          _counts = initialCounts;
+          _selectedCompany = context.read<CompanyProvider>().companies.firstWhere((c) => c.id == form.company?.id);
+          _selectedDate = form.date;
+          _pocketCount = form.pocketCount;
+          _plasticBagsSmall = form.plasticBagsSmall;
+          _plasticBagsLarge = form.plasticBagsLarge;
+          _totalTaiesMain = form.totalTaiesMain;
+          _totalDrapsMain = form.totalDrapsMain;
+          _notes = form.notes;
+          _initialized = true;
+        });
+      } else {
+        setState(() {
+          _counts = initialCounts;
+          _sectionInitials = {
+            'TOWELS': myInitials,
+            'BED_SHEETS': myInitials,
+            'COVERS': myInitials,
+          };
+          _initialized = true;
+        });
+      }
     }
   }
 
@@ -226,6 +267,37 @@ class _NewFormWizardState extends State<NewFormWizard> {
             onChanged: (val) => setState(() => _selectedCompany = val),
           ),
           const SizedBox(height: 24),
+          const Text('DATE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (picked != null) setState(() => _selectedDate = picked);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today_outlined, size: 20, color: Colors.grey),
+                  const SizedBox(width: 12),
+                  Text(
+                    "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
           _buildCounterField(
             'BOLSILLOS (Pockets)',
             _pocketCount,
@@ -267,10 +339,28 @@ class _NewFormWizardState extends State<NewFormWizard> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(sectionTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(sectionTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  SizedBox(
+                    width: 80,
+                    child: TextFormField(
+                      initialValue: _sectionInitials[sectionTitle],
+                      decoration: const InputDecoration(
+                        labelText: 'Initials',
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                      onChanged: (val) => _sectionInitials[sectionTitle] = val,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               const Text('Enter the counted quantities.', style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
             ],
           );
         }
@@ -337,6 +427,28 @@ class _NewFormWizardState extends State<NewFormWizard> {
             ),
           ),
           
+          const SizedBox(height: 24),
+          const Text('HAND-FINISHED TOTALS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildCounterField(
+                  'PILLOWCASES',
+                  _totalTaiesMain,
+                  (val) => setState(() => _totalTaiesMain = val),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildCounterField(
+                  'SHEETS',
+                  _totalDrapsMain,
+                  (val) => setState(() => _totalDrapsMain = val),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 24),
           const Text('PACKAGING DETAILS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
           const SizedBox(height: 12),
@@ -509,39 +621,47 @@ class _NewFormWizardState extends State<NewFormWizard> {
 
     final form = LaundryForm(
       companyId: _selectedCompany!.id,
-      date: DateTime.now(),
+      date: _selectedDate,
       pocketCount: _pocketCount,
       plasticBagsSmall: _plasticBagsSmall,
       plasticBagsLarge: _plasticBagsLarge,
+      totalTaiesMain: _totalTaiesMain,
+      totalDrapsMain: _totalDrapsMain,
       notes: _notes,
       sections: sections,
       status: status,
     );
 
-    final success = await context.read<FormsProvider>().submitForm(form);
+    final forms = context.read<FormsProvider>();
+    final success = widget.existingForm != null
+        ? await forms.updateForm(widget.existingForm!.id!, form)
+        : await forms.submitForm(form);
+
     if (success && mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Report submitted successfully!')),
+        SnackBar(content: Text(widget.existingForm != null ? 'Report updated!' : 'Report submitted!')),
       );
     }
   }
 
   FormSectionModel _mapSection(String sectionName, List<CatalogItemModel> catalogItems) {
-    final userInitials = context.read<AuthProvider>().user?.initials ?? '??';
+    final initials = _sectionInitials[sectionName] ?? context.read<AuthProvider>().user?.initials ?? '??';
 
     return FormSectionModel(
       sectionName: sectionName,
-      filledByInitials: userInitials,
+      filledByInitials: initials,
       items: catalogItems.map((item) {
         return FormItemModel(
           category: item.name,
+          size: item.size,
           isColored: false,
           quantity: _counts[item.name]?['std'] ?? 0,
         );
       }).toList() + catalogItems.map((item) {
         return FormItemModel(
           category: item.name,
+          size: item.size,
           isColored: true,
           quantity: _counts[item.name]?['clr'] ?? 0,
         );

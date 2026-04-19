@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:laundry_app/core/api/api_client.dart';
 
 class SocketService extends ChangeNotifier {
   IO.Socket? _socket;
@@ -12,7 +13,7 @@ class SocketService extends ChangeNotifier {
   int get unreadCount => _unreadCount;
   List<Map<String, dynamic>> get notifications => _notifications;
 
-  static const String _baseUrl = 'http://192.168.1.3:8080'; // Same as ApiClient
+  static String get _baseUrl => ApiClient.baseUrl;
 
   Future<void> connect() async {
     final prefs = await SharedPreferences.getInstance();
