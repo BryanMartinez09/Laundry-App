@@ -12,6 +12,8 @@ class SocketService extends ChangeNotifier {
 
   int get unreadCount => _unreadCount;
   List<Map<String, dynamic>> get notifications => _notifications;
+  bool get isConnected => _socket?.connected ?? false;
+  IO.Socket? get socket => _socket;
 
   static String get _baseUrl => ApiClient.baseUrl;
 
@@ -38,10 +40,12 @@ class SocketService extends ChangeNotifier {
 
     _socket!.onConnect((_) {
       debugPrint('[Socket] Connected: ${_socket!.id}');
+      notifyListeners();
     });
 
     _socket!.onConnectError((data) {
       debugPrint('[Socket] Connection error: $data');
+      notifyListeners();
     });
 
     _socket!.on('notification', (data) {

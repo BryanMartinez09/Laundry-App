@@ -11,73 +11,51 @@ class ProfileScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile', style: TextStyle(fontWeight: FontWeight.bold)),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            // Avatar
-            CircleAvatar(
-              radius: 60,
-              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-              child: Text(
-                user?.initials ?? '??',
-                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
-              ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          // Avatar
+          CircleAvatar(
+            radius: 60,
+            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+            child: Text(
+              user?.initials ?? '??',
+              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
             ),
-            const SizedBox(height: 24),
-            Text(
-              user?.name ?? 'Loading...',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              user?.email ?? '',
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-            const SizedBox(height: 40),
-            
-            // Info Cards
-            _buildInfoCard(
-              icon: Icons.badge_outlined,
-              label: 'System Role',
-              value: user?.role.name ?? 'Employee',
-            ),
-            const SizedBox(height: 16),
-            _buildInfoCard(
-              icon: Icons.fingerprint,
-              label: 'User ID',
-              value: user?.id?.substring(0, 8).toUpperCase() ?? '--------',
-            ),
-            
-            const SizedBox(height: 60),
-            
-            // Logout Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.logout),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[50],
-                  foregroundColor: Colors.red,
-                  side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                onPressed: () => _handleLogout(context),
-                label: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Versión 1.0.0 (Dynamic Catalog Update)',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            user?.name ?? 'Loading...',
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            user?.email ?? '',
+            style: const TextStyle(color: Colors.grey, fontSize: 16),
+          ),
+          const SizedBox(height: 40),
+          
+          // Info Cards
+          _buildInfoCard(
+            icon: Icons.badge_outlined,
+            label: 'System Role',
+            value: user?.role.name ?? 'Employee',
+          ),
+          const SizedBox(height: 16),
+          _buildInfoCard(
+            icon: Icons.fingerprint,
+            label: 'User ID',
+            value: user?.id?.substring(0, 8).toUpperCase() ?? '--------',
+          ),
+          
+          const SizedBox(height: 60),
+          
+          const Text(
+            'Versión 1.0.0 (Dynamic Catalog Update)',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+        ],
       ),
     );
   }

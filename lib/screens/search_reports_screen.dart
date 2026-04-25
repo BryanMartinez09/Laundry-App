@@ -73,16 +73,11 @@ class _SearchReportsScreenState extends State<SearchReportsScreen> {
     final companyProvider = context.watch<CompanyProvider>();
     final formsProvider = context.watch<FormsProvider>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Advanced Search', style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
-      body: Column(
-        children: [
-          _buildFilterPanel(companyProvider),
-          Expanded(child: _buildResultsList(formsProvider)),
-        ],
-      ),
+    return Column(
+      children: [
+        _buildFilterPanel(companyProvider),
+        Expanded(child: _buildResultsList(formsProvider)),
+      ],
     );
   }
 

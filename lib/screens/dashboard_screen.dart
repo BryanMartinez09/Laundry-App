@@ -117,128 +117,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final forms = context.watch<FormsProvider>();
     final socketService = context.watch<SocketService>();
     
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Dashboard - ${auth.user?.role.name.toUpperCase()}', 
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)
-        ),
-        actions: [
-          Stack(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Welcome Header
+          Text(
+            'Hello, ${auth.user?.name ?? "Employee"} 👋',
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const Text('What are we registering today?', style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 30),
+
+          // Summary Cards
+          Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () => _showNotificationTray(context, socketService),
+              _buildSummaryCard(
+                'Reports Today',
+                '${forms.todayCount}',
+                Icons.assignment_outlined,
+                AppTheme.primaryColor,
               ),
-              if (socketService.unreadCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                    child: Text(
-                      '${socketService.unreadCount}',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
+              const SizedBox(width: 15),
+              _buildSummaryCard(
+                'Pending',
+                '${forms.pendingCount}',
+                Icons.pending_actions,
+                Colors.orange,
+              ),
             ],
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Header
-            Text(
-              'Hello, ${auth.user?.name ?? "Employee"} 👋',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const Text('What are we registering today?', style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 30),
+          const SizedBox(height: 30),
 
-            // Summary Cards
-            Row(
-              children: [
-                _buildSummaryCard(
-                  'Reports Today',
-                  '${forms.todayCount}',
-                  Icons.assignment_outlined,
-                  AppTheme.primaryColor,
+          // Quick Actions Title
+          const Text(
+            'Quick Actions',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 15),
+
+          // New Form Button (Card style) - ONLY if permission Agregar exists
+          if (auth.user?.hasPermission('Forms', 'Add') ?? false)
+            InkWell(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const NewFormWizard()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 15),
-                _buildSummaryCard(
-                  'Pending',
-                  '${forms.pendingCount}',
-                  Icons.pending_actions,
-                  Colors.orange,
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-
-            // Quick Actions Title
-            const Text(
-              'Quick Actions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 15),
-
-            // New Form Button (Card style) - ONLY if permission Agregar exists
-            if (auth.user?.hasPermission('Forms', 'Agregar') ?? false)
-              InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const NewFormWizard()),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryColor.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.white24,
-                        child: Icon(Icons.add, color: Colors.white),
-                      ),
-                      SizedBox(width: 20),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'New Entry',
-                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'Create a new laundry report',
-                            style: TextStyle(color: Colors.white70, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                child: const Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.white24,
+                      child: Icon(Icons.add, color: Colors.white),
+                    ),
+                    SizedBox(width: 20),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'New Entry',
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Create a new laundry report',
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }

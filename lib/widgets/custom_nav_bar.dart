@@ -3,6 +3,8 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:line_icons/line_icons.dart';
 import '../models/user_model.dart';
 import '../core/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class CustomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -25,21 +27,18 @@ class CustomNavBar extends StatelessWidget {
         icon: LineIcons.home,
         text: 'Home',
       ),
-      if (user?.hasPermission('Reports', 'View') ?? false)
-        GButton(
-          icon: LineIcons.fileInvoice,
-          text: 'Reports',
-        ),
-      if (user?.hasPermission('Reports', 'View') ?? false)
-        GButton(
-          icon: LineIcons.search,
-          text: 'Search',
-        ),
-      if (user?.hasPermission('Profile', 'View') ?? false)
-        GButton(
-          icon: LineIcons.user,
-          text: 'Profile',
-        ),
+      GButton(
+        icon: LineIcons.fileInvoice,
+        text: 'Reports',
+      ),
+      GButton(
+        icon: LineIcons.search,
+        text: 'Search',
+      ),
+      GButton(
+        icon: LineIcons.user,
+        text: 'Profile',
+      ),
     ];
 
     return Container(
