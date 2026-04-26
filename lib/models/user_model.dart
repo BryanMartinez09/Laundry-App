@@ -34,21 +34,33 @@ class User {
   }
 
   bool hasPermission(String view, String action) {
-    if (email == 'admin@laundry.com') return true;
+    // 1. El rol ADMIN maestro siempre tiene acceso total
+    if (role.name.toUpperCase() == 'ADMIN') return true;
+
+    // 2. Normalizar entradas
+    final String targetView = view.trim().toLowerCase();
+    final String targetAction = action.trim().toLowerCase();
+
+    // 3. Usar EXCLUSIVAMENTE la matriz móvil para el App
+    final List mobilePerms = role.permissionsMobile;
     
-    // Switch to permissionsMobile for app-specific logic
-    final List rolePerms = role.permissionsMobile;
-    Map<String, dynamic>? perm;
-    for (var p in rolePerms) {
-      if (p is Map && p['view'] == view) {
-        perm = Map<String, dynamic>.from(p);
-        break;
+    Map<String, dynamic>? foundModule;
+    for (var p in mobilePerms) {
+      if (p is Map) {
+        final String? viewName = p['view']?.toString().trim().toLowerCase();
+        // Coincidencia por nombre interno o sub-label
+        if (viewName != null && (viewName == targetView || viewName.contains(targetView))) {
+          foundModule = Map<String, dynamic>.from(p);
+          break;
+        }
       }
     }
     
-    if (perm == null) return false;
-    final List actions = perm['actions'] ?? [];
-    return actions.contains(action);
+    if (foundModule == null) return false;
+
+    // 4. Verificar la acción
+    final List actions = foundModule['actions'] ?? [];
+    return actions.any((a) => a.toString().trim().toLowerCase() == targetAction);
   }
 }
 

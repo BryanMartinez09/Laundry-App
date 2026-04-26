@@ -113,16 +113,16 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     final user = auth.user;
     final bool canDelete = (user?.hasPermission('Forms', 'Delete') ?? false) &&
         _currentForm.status != FormStatus.APPROVED;
-    final bool isAdmin = auth.user?.email == 'admin@laundry.com' ||
-        (auth.user?.role?.name ?? '').toUpperCase() == 'ADMIN';
-    final bool isManager = (auth.user?.role?.name ?? '').toUpperCase() == 'MANAGER' || isAdmin;
-    final bool canApprove = isManager && _currentForm.status == FormStatus.PENDING_APPROVAL;
+    final bool canEdit = (user?.hasPermission('Forms', 'Edit') ?? false) &&
+        _currentForm.status != FormStatus.APPROVED;
+    final bool canApprove = (user?.hasPermission('Forms', 'Approve') ?? false) && 
+        _currentForm.status == FormStatus.PENDING_APPROVAL;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Report Details', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
-          if (_currentForm.status != FormStatus.APPROVED)
+          if (canEdit)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               onPressed: () {
