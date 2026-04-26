@@ -35,7 +35,7 @@ class User {
 
   bool hasPermission(String view, String action) {
     // 1. El rol ADMIN maestro siempre tiene acceso total
-    if (role.name.toUpperCase() == 'ADMIN') return true;
+   // if (role.name.toUpperCase() == 'ADMIN') return true;
 
     // 2. Normalizar entradas
     final String targetView = view.trim().toLowerCase();

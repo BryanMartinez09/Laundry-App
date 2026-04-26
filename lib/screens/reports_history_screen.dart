@@ -23,14 +23,9 @@ class _ReportsHistoryScreenState extends State<ReportsHistoryScreen> {
   Widget build(BuildContext context) {
     final formsProvider = context.watch<FormsProvider>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reports History', style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => formsProvider.fetchRecentForms(),
-        child: _buildBody(formsProvider),
-      ),
+    return RefreshIndicator(
+      onRefresh: () => formsProvider.fetchRecentForms(),
+      child: _buildBody(formsProvider),
     );
   }
 
